@@ -1,0 +1,10 @@
+<a
+  class="back-button"
+  href="{{ back_url|default:'#' }}"
+  {% if not back_url %}
+    onclick="history.back(); return false;"
+  {% endif %}
+  aria-label="{{ back_label|default:'Назад' }}"
+>
+  <span class="material-icons">arrow_back</span>
+</a>
