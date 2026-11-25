@@ -1,0 +1,143 @@
+{% extends "miniapp/base_client.html" %}
+
+{% block title %}Raptor — Каталог{% endblock %}
+
+{% block extra_head %}
+<style>
+  .filter-shell {
+    display: grid;
+    gap: 10px;
+  }
+
+  .filter-label {
+    margin: 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+  }
+
+  .filter-strip {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border);
+    background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.94rem;
+    box-sizing: border-box;
+  }
+
+  .filter-chip.is-active {
+    border-color: var(--tg-theme-button-color, #0088cc);
+    color: var(--tg-theme-button-color, #0088cc);
+    background: color-mix(in srgb, var(--accent-soft) 72%, transparent);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="home" class="screen active">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Full Catalog</p>
+      <h2>Все предложения</h2>
+    </div>
+  </div>
+
+  <section class="client-hero">
+    <p class="eyebrow">Extended Browse</p>
+    <h3>Все доступные услуги</h3>
+    <div class="client-stat-row">
+      <span class="client-stat-chip">{{ active_offerings_count }} активных предложений</span>
+      <span class="client-stat-chip">{{ filtered_offerings_count }} в текущей выборке</span>
+    </div>
+    {% if featured_categories %}
+      <div class="client-stat-row">
+        {% for item in featured_categories %}
+          <span class="meta-chip">{{ item.category }} · {{ item.total }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="client-actions">
+      <a class="secondary-link" href="/client/home/?telegram_id={{ telegram_id }}#catalog-section">Назад на главную</a>
+    </div>
+  </section>
+
+  <section class="detail-card">
+    <div class="filter-shell">
+      <p class="filter-label">Кто оказывает услугу</p>
+      <div class="filter-strip">
+        {% for filter in owner_filter_links %}
+          <a class="filter-chip {% if filter.active %}is-active{% endif %}" href="{{ filter.url }}">{{ filter.label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="filter-shell">
+      <p class="filter-label">Категория</p>
+      <div class="filter-strip">
+        {% for filter in category_filter_links %}
+          <a class="filter-chip {% if filter.active %}is-active{% endif %}" href="{{ filter.url }}">{{ filter.label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <div class="market-grid">
+    {% for offering in featured_offerings %}
+      <a class="market-card" href="/client/offerings/{{ offering.id }}/?telegram_id={{ telegram_id }}">
+        <div class="market-card-head">
+          <h3>{{ offering.title }}</h3>
+          {% if offering.price_label %}
+            <span class="offering-price">{{ offering.price_label }}</span>
+          {% endif %}
+        </div>
+        <p class="market-owner">
+          {% if offering.owner_type == "studio" %}
+            Студия · {{ offering.owner_name }}
+          {% else %}
+            Фрилансер · {{ offering.owner_name }}
+          {% endif %}
+        </p>
+        <p>{{ offering.short_description|truncatechars:170 }}</p>
+        <div class="market-meta-row">
+          <span class="offering-badge">{{ offering.get_offering_type_display }}</span>
+          <span class="meta-chip">{{ offering.category }}</span>
+          {% if offering.delivery_text %}
+            <span class="meta-chip">{{ offering.delivery_text }}</span>
+          {% endif %}
+        </div>
+        <div class="market-card-footer">
+          <span class="market-owner">
+            {% if offering.owner_type == "studio" %}
+              Командная витрина
+            {% else %}
+              Личный оффер
+            {% endif %}
+          </span>
+          <span class="ghost-link">
+            Открыть карточку
+            <span class="material-icons">arrow_forward</span>
+          </span>
+        </div>
+      </a>
+    {% empty %}
+      <section class="summary-card">
+        <h3>Каталог пока пуст</h3>
+        <p>Попробуйте изменить фильтры.</p>
+      </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

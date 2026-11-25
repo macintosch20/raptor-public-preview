@@ -1,0 +1,27 @@
+{% extends "miniapp/base_client.html" %}
+
+{% block title %}Raptor — Редактировать профиль клиента{% endblock %}
+
+{% block content %}
+<div id="home" class="screen active">
+  <div class="page-topbar">
+    {% include "miniapp/partials/back_button.html" with back_url="/client/profile/?telegram_id="|add:telegram_id back_label="Назад к профилю" %}
+  </div>
+
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Client Profile</p>
+      <h2>Редактировать профиль</h2>
+    </div>
+  </div>
+
+  <form class="form-layout" method="post">
+    {% csrf_token %}
+    <div class="form-field">
+      <label for="{{ form.short_description.id_for_label }}">{{ form.short_description.label }}</label>
+      {{ form.short_description }}
+    </div>
+    <button class="primary-submit" type="submit">Сохранить изменения</button>
+  </form>
+</div>
+{% endblock %}

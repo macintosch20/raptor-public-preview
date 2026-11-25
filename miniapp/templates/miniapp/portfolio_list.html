@@ -1,0 +1,46 @@
+{% extends "miniapp/base_freelancer.html" %}
+
+{% block title %}Raptor — Портфолио{% endblock %}
+
+{% block content %}
+<div id="home" class="screen active">
+  <div class="page-topbar">
+    {% include "miniapp/partials/back_button.html" with back_url="/freelancer/profile/?telegram_id="|add:telegram_id back_label="Назад в профиль" %}
+  </div>
+
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Portfolio</p>
+      <h2>Все кейсы</h2>
+    </div>
+    <a class="primary-link" href="/freelancer/portfolio/add/?telegram_id={{ telegram_id }}">Добавить кейс</a>
+  </div>
+
+  {% if portfolio_items %}
+    <div class="portfolio-grid">
+      {% for item in portfolio_items %}
+        <a class="portfolio-card" href="/freelancer/portfolio/{{ item.id }}/?telegram_id={{ telegram_id }}">
+          {% if item.preview_image %}
+            <img class="portfolio-card-image" src="/media/{{ item.preview_image }}" alt="{{ item.title }}">
+          {% else %}
+            <div class="portfolio-card-placeholder">Нет изображений</div>
+          {% endif %}
+          <div class="portfolio-card-body">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.short_description|truncatechars:140 }}</p>
+            {% if item.completion_date %}
+              <span class="portfolio-meta">{{ item.completion_date }}</span>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="portfolio-empty-container">
+      <h3>У тебя еще нет кейсов</h3>
+      <p class="portfolio-empty-message">Добавь первый кейс с картинками и результатом, чтобы портфолио начало работать на тебя.</p>
+      <a class="portfolio-empty-button" href="/freelancer/portfolio/add/?telegram_id={{ telegram_id }}">Добавить кейс</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,334 @@
+{% extends "miniapp/base_freelancer.html" %}
+
+{% block title %}Raptor — {{ portfolio_item.title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .gallery-trigger {
+    cursor: zoom-in;
+  }
+
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    z-index: 200;
+  }
+
+  .lightbox-overlay.is-open {
+    display: flex;
+  }
+
+  .lightbox-shell {
+    width: min(100%, 980px);
+    display: grid;
+    gap: 14px;
+  }
+
+  .lightbox-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #fff;
+  }
+
+  .lightbox-counter {
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .lightbox-close,
+  .lightbox-nav {
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .lightbox-close {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .lightbox-stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+  }
+
+  .lightbox-image {
+    max-width: 100%;
+    max-height: 74vh;
+    object-fit: contain;
+    border-radius: 18px;
+    display: block;
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 46px;
+    height: 46px;
+  }
+
+  .lightbox-nav.prev {
+    left: 8px;
+  }
+
+  .lightbox-nav.next {
+    right: 8px;
+  }
+
+  .lightbox-nav.is-hidden {
+    display: none;
+  }
+
+  body.tg-mobile .lightbox-image {
+    max-height: 66vh;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="home" class="screen active">
+  <div class="page-topbar">
+    {% include "miniapp/partials/back_button.html" with back_url="/freelancer/portfolio/?telegram_id="|add:telegram_id back_label="Назад к кейсам" %}
+  </div>
+
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Case Study</p>
+      <h2>{{ portfolio_item.title }}</h2>
+    </div>
+    <div class="profile-actions" style="margin-top: 0;">
+      <a class="primary-link" href="/freelancer/portfolio/{{ portfolio_item.id }}/edit/?telegram_id={{ telegram_id }}">Редактировать</a>
+      <button class="danger-link" id="delete-case-button" type="button">
+        <span class="material-icons">delete</span>
+        Удалить
+      </button>
+    </div>
+  </div>
+
+  {% if portfolio_item.preview_image %}
+    <img
+      class="detail-hero gallery-trigger"
+      src="/media/{{ portfolio_item.preview_image }}"
+      alt="{{ portfolio_item.title }}"
+      data-gallery-index="0"
+    >
+  {% endif %}
+
+  <div class="detail-card">
+    <div class="detail-block">
+      <h3>Кратко о проекте</h3>
+      <p>{{ portfolio_item.short_description }}</p>
+    </div>
+
+    {% if portfolio_item.most_difficult_task %}
+      <div class="detail-block">
+        <h3>Самая сложная задача</h3>
+        <p>{{ portfolio_item.most_difficult_task }}</p>
+      </div>
+    {% endif %}
+
+    {% if portfolio_item.result %}
+      <div class="detail-block">
+        <h3>Результат</h3>
+        <p>{{ portfolio_item.result }}</p>
+      </div>
+    {% endif %}
+
+    {% if portfolio_item.images and portfolio_item.images|length > 1 %}
+      <div class="detail-block">
+        <h3>Галерея</h3>
+        <div class="detail-gallery">
+          {% for image in portfolio_item.images %}
+            <img
+              class="detail-gallery-image gallery-trigger"
+              src="/media/{{ image }}"
+              alt="{{ portfolio_item.title }}"
+              data-gallery-index="{{ forloop.counter0 }}"
+            >
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if portfolio_item.link1 or portfolio_item.link2 or portfolio_item.link3 %}
+      <div class="detail-block">
+        <h3>Ссылки</h3>
+        <div class="detail-links">
+          {% if portfolio_item.link1 %}<a class="secondary-link" href="{{ portfolio_item.link1 }}" target="_blank" rel="noopener noreferrer">Ссылка 1</a>{% endif %}
+          {% if portfolio_item.link2 %}<a class="secondary-link" href="{{ portfolio_item.link2 }}" target="_blank" rel="noopener noreferrer">Ссылка 2</a>{% endif %}
+          {% if portfolio_item.link3 %}<a class="secondary-link" href="{{ portfolio_item.link3 }}" target="_blank" rel="noopener noreferrer">Ссылка 3</a>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if portfolio_item.completion_date %}
+      <div class="detail-block">
+        <h3>Дата завершения</h3>
+        <p>{{ portfolio_item.completion_date }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<form id="delete-case-form" method="post" action="/freelancer/portfolio/{{ portfolio_item.id }}/delete/?telegram_id={{ telegram_id }}" style="display:none;">
+  {% csrf_token %}
+</form>
+
+{{ portfolio_item.images|default_if_none:"[]"|json_script:"portfolio-images-data" }}
+
+<div class="lightbox-overlay" id="portfolio-lightbox" aria-hidden="true">
+  <div class="lightbox-shell">
+    <div class="lightbox-topbar">
+      <span class="lightbox-counter" id="lightbox-counter"></span>
+      <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Закрыть просмотр">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="lightbox-stage">
+      <button class="lightbox-nav prev" id="lightbox-prev" type="button" aria-label="Предыдущее фото">
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <img class="lightbox-image" id="lightbox-image" src="" alt="{{ portfolio_item.title }}">
+      <button class="lightbox-nav next" id="lightbox-next" type="button" aria-label="Следующее фото">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const deleteCaseButton = document.getElementById("delete-case-button");
+  const deleteCaseForm = document.getElementById("delete-case-form");
+  const galleryTriggers = Array.from(document.querySelectorAll(".gallery-trigger"));
+  const lightboxOverlay = document.getElementById("portfolio-lightbox");
+  const lightboxImage = document.getElementById("lightbox-image");
+  const lightboxCounter = document.getElementById("lightbox-counter");
+  const lightboxClose = document.getElementById("lightbox-close");
+  const lightboxPrev = document.getElementById("lightbox-prev");
+  const lightboxNext = document.getElementById("lightbox-next");
+  const galleryImagePaths = JSON.parse(document.getElementById("portfolio-images-data").textContent || "[]");
+  const galleryImages = galleryImagePaths.map((imagePath) => `/media/${imagePath}`);
+  let activeImageIndex = 0;
+
+  async function requestDeletionConfirmation(message) {
+    if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.showConfirm === "function") {
+      return await new Promise((resolve) => {
+        window.Telegram.WebApp.showConfirm(message, resolve);
+      });
+    }
+
+    return window.confirm(message);
+  }
+
+  if (deleteCaseButton && deleteCaseForm) {
+    deleteCaseButton.addEventListener("click", async () => {
+      const confirmed = await requestDeletionConfirmation("Удалить кейс полностью? Это действие нельзя отменить.");
+      if (!confirmed) {
+        return;
+      }
+
+      deleteCaseForm.submit();
+    });
+  }
+
+  function renderLightbox() {
+    if (!galleryImages.length) {
+      return;
+    }
+
+    const safeIndex = ((activeImageIndex % galleryImages.length) + galleryImages.length) % galleryImages.length;
+    activeImageIndex = safeIndex;
+    lightboxImage.src = galleryImages[safeIndex];
+    lightboxCounter.textContent = `${safeIndex + 1} / ${galleryImages.length}`;
+    lightboxPrev.classList.toggle("is-hidden", galleryImages.length < 2);
+    lightboxNext.classList.toggle("is-hidden", galleryImages.length < 2);
+  }
+
+  function openLightbox(index) {
+    if (!galleryImages.length) {
+      return;
+    }
+
+    activeImageIndex = index;
+    renderLightbox();
+    lightboxOverlay.classList.add("is-open");
+    lightboxOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox() {
+    lightboxOverlay.classList.remove("is-open");
+    lightboxOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  function moveLightbox(step) {
+    activeImageIndex += step;
+    renderLightbox();
+  }
+
+  galleryTriggers.forEach((trigger) => {
+    trigger.addEventListener("click", () => {
+      const imageIndex = Number(trigger.dataset.galleryIndex || 0);
+      openLightbox(imageIndex);
+    });
+  });
+
+  if (lightboxClose) {
+    lightboxClose.addEventListener("click", closeLightbox);
+  }
+
+  if (lightboxPrev) {
+    lightboxPrev.addEventListener("click", () => moveLightbox(-1));
+  }
+
+  if (lightboxNext) {
+    lightboxNext.addEventListener("click", () => moveLightbox(1));
+  }
+
+  if (lightboxOverlay) {
+    lightboxOverlay.addEventListener("click", (event) => {
+      if (event.target === lightboxOverlay) {
+        closeLightbox();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (!lightboxOverlay || !lightboxOverlay.classList.contains("is-open")) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      closeLightbox();
+      return;
+    }
+
+    if (event.key === "ArrowLeft" && galleryImages.length > 1) {
+      moveLightbox(-1);
+    }
+
+    if (event.key === "ArrowRight" && galleryImages.length > 1) {
+      moveLightbox(1);
+    }
+  });
+</script>
+{% endblock %}
